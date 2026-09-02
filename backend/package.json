@@ -3,22 +3,29 @@
   "version": "1.0.0",
   "description": "Backend API for AI cost estimator",
   "main": "server.js",
+  "homepage":"https://sailajapinisetty.github.io/Estimator/",
   "scripts": {
     "predev": "lsof -ti:5000 | xargs kill -9 2>/dev/null || true",
     "prestart": "lsof -ti:5000 | xargs kill -9 2>/dev/null || true",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build": "echo 'No build step for backend'"
   },
-  "keywords": ["embeddings", "tokens", "cost"],
+  "keywords": [
+    "embeddings",
+    "tokens",
+    "cost"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "js-tiktoken": "^1.0.7",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "js-tiktoken": "^1.0.7"
   },
   "devDependencies": {
+    "gh-pages": "^6.3.0",
     "nodemon": "^3.0.1"
   }
 }
