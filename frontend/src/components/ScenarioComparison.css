@@ -1,0 +1,275 @@
+.comparison-panel {
+  margin-top: 24px;
+}
+
+.comparison-table-wrapper {
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparison-table thead {
+  background: linear-gradient(180deg, #fbfcfe 0%, #ffffff 100%);
+  border-bottom: 2px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.comparison-table th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 650;
+  color: var(--ink-600);
+  border-right: 1px solid var(--line);
+}
+
+.comparison-table th:first-child {
+  background: #fafbfc;
+  min-width: 160px;
+}
+
+.comparison-table th:last-child {
+  border-right: none;
+}
+
+.scenario-col {
+  width: 180px;
+  min-width: 180px;
+}
+
+.scenario-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.scenario-header-name {
+  font-size: 0.87rem;
+  font-weight: 700;
+  color: var(--brand-600);
+}
+
+.scenario-header-date {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--ink-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.comparison-table tbody td {
+  padding: 12px;
+  border-bottom: 1px solid var(--line-soft);
+  border-right: 1px solid var(--line-soft);
+  vertical-align: middle;
+}
+
+.comparison-table tbody td:last-child {
+  border-right: none;
+}
+
+.label-cell {
+  background: #fafbfc;
+  font-weight: 650;
+  color: var(--ink-700);
+  min-width: 160px;
+}
+
+.value-cell {
+  font-size: 0.84rem;
+  color: var(--ink-900);
+}
+
+.value-cell.mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.81rem;
+  font-weight: 600;
+}
+
+.value-main {
+  font-weight: 650;
+  color: var(--ink-900);
+}
+
+.value-sub {
+  font-size: 0.75rem;
+  color: var(--ink-400);
+  margin-top: 2px;
+}
+
+.value-cell.emphasis {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--brand-600);
+}
+
+.value-cell.good {
+  color: var(--teal-600);
+}
+
+.comparison-table tbody tr.highlight {
+  background: var(--brand-50);
+  font-weight: 600;
+}
+
+.comparison-table tbody tr.highlight td {
+  background: var(--brand-50);
+  border-bottom: 1px solid var(--brand-200);
+}
+
+.comparison-table tbody tr.highlight .label-cell {
+  background: var(--brand-100);
+}
+
+.section-spacer {
+  height: 20px;
+  background: #fafbfc;
+}
+
+.section-spacer td {
+  border-bottom: 2px solid var(--line);
+  padding: 8px 12px;
+}
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brand-600);
+  background: #fafbfc;
+}
+
+.comparison-insights {
+  padding: 20px 26px;
+  background: var(--teal-50);
+  border-top: 1px solid var(--teal-100);
+}
+
+.comparison-insights h3 {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--teal-600);
+  margin: 0 0 10px;
+}
+
+.insights-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.insights-list li {
+  font-size: 0.85rem;
+  color: var(--teal-900);
+  line-height: 1.6;
+}
+
+.insights-list strong {
+  font-weight: 700;
+  color: var(--teal-700);
+}
+
+.close-comparison {
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: white;
+  color: var(--ink-600);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.close-comparison:hover {
+  background: #fafbfc;
+  border-color: var(--ink-300);
+}
+
+.comparison-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-export-pdf {
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: white;
+  color: #7c3aed;
+  border: 1px solid #d8b4fe;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-export-pdf:hover:not(:disabled) {
+  background: #faf5ff;
+  border-color: #c084fc;
+}
+
+.btn-export-pdf:active:not(:disabled) {
+  background: #f3e8ff;
+}
+
+.btn-export-pdf:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1000px) {
+  .scenario-col {
+    width: 140px;
+    min-width: 140px;
+  }
+
+  .label-cell {
+    min-width: 120px;
+  }
+
+  .comparison-table {
+    font-size: 0.78rem;
+  }
+
+  .comparison-table th,
+  .comparison-table td {
+    padding: 10px 8px;
+  }
+}
+
+@media (max-width: 700px) {
+  .comparison-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .scenario-col {
+    width: 110px;
+    min-width: 110px;
+  }
+
+  .label-cell {
+    min-width: 100px;
+  }
+
+  .scenario-header-name {
+    font-size: 0.8rem;
+  }
+
+  .comparison-insights {
+    padding: 16px 18px;
+  }
+}
