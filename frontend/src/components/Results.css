@@ -794,3 +794,72 @@
   color: var(--ink-500);
   line-height: 1.5;
 }
+
+.block-subhead {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 16px;
+  margin-bottom: 12px;
+}
+
+.detail-block .equation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 4px 0 18px;
+}
+
+.detail-block .term {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  min-width: 84px;
+}
+
+.detail-block .term-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+.detail-block .term-label {
+  font-size: 0.66rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-400);
+}
+
+.detail-block .term.outcome {
+  background: var(--navy-900);
+  border-color: var(--navy-900);
+}
+
+.detail-block .term.outcome .term-value { color: #fff; }
+.detail-block .term.outcome .term-label { color: #94a3b8; }
+
+.detail-block .op {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink-400);
+}
+
+.detail-block .math-note {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-left: 3px solid var(--brand-500);
+  border-radius: 0 8px 8px 0;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--ink-500);
+}

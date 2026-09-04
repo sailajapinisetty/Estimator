@@ -187,86 +187,66 @@ function Results({ results, loading, text, onSaveScenario }) {
   if (isGeneration) {
     return (
       <>
-        <section className="panel">
-          <header className="panel-head">
-            <div>
-              <h2 className="panel-title">Analysis Summary</h2>
-              <p className="panel-sub">
-                {results.model} · {results.provider} · generation model
-              </p>
-            </div>
-            {onSaveScenario && (
-              <button className="btn-save-scenario" onClick={onSaveScenario} title="Save this configuration and results for later comparison">
-                💾 Save scenario
-              </button>
-            )}
-          </header>
+        <ProcessVisualization text={text} results={results} onSaveScenario={onSaveScenario}>
+          <div className="connector" aria-hidden="true" />
 
-          {results.modelNote && <div className="accuracy-notice info">{results.modelNote}</div>}
-          {results.tokenCountExact === false && (
-            <div className="accuracy-notice">
-              Token counts for {results.provider} are approximated using OpenAI's cl100k_base encoder. This provider
-              uses a different tokenizer, so the real count will differ — treat this figure as indicative, not exact.
-            </div>
-          )}
-
-          <div className="accuracy-notice info">
-            <strong>📊 What this shows:</strong> This analysis estimates token consumption and cost for your prompt. 
-            <strong> Tokens</strong> = roughly 4 characters. 
-            <strong> System prompt</strong> is sent on every API call (large overhead). 
-            Compare models with different token costs to optimize your spending. 
-            <strong>Enable caching</strong> on repeated system prompts to save up to 90%.
-          </div>
-
-          <div className="conversion-chain">
-            <div className="chain-node">
-              <span className="chain-value">{chars.toLocaleString()}</span>
-              <span className="chain-label">Characters</span>
-            </div>
-            <span className="chain-arrow">→</span>
-            <div className="chain-node">
-              <span className="chain-value">{results.tokenCount.toLocaleString()}</span>
-              <span className="chain-label">Input tokens</span>
-            </div>
-            {results.outputTokens && (
-              <>
-                <span className="chain-arrow">+</span>
-                <div className="chain-node">
-                  <span className="chain-value">{results.outputTokens.toLocaleString()}</span>
-                  <span className="chain-label">Output tokens</span>
+          {/* Stage 4 */}
+          <div className="stage">
+            <div className="stage-head">
+              <span className="stage-idx">04</span>
+              <div>
+                <div className="stage-name">Cost / Billing analysis</div>
+                <div className="stage-meta">
+                  {results.model} · {results.provider} · charged on input and output tokens
                 </div>
-              </>
-            )}
-          </div>
-
-          <div className="kpi-strip">
-            <div className="kpi">
-              <span className="kpi-label">Input tokens</span>
-              <span className="kpi-value">{results.billedTokens.toLocaleString()}</span>
-              <span className="kpi-foot">
-                {results.systemTokens > 0
-                  ? `${results.systemTokens} system + ${results.userTokens} user`
-                  : `${results.inputCostFormatted} at $${results.pricePerMillionTokens}/1M`}
-              </span>
-            </div>
-            {results.outputTokens && (
-              <div className="kpi">
-                <span className="kpi-label">Output tokens</span>
-                <span className="kpi-value">{results.outputTokens.toLocaleString()}</span>
-                <span className="kpi-foot">
-                  {results.outputCostFormatted} at ${results.outputPricePerMillionTokens}/1M
-                </span>
               </div>
-            )}
-            <div className="kpi accent">
-              <span className="kpi-label">Cost per request</span>
-              <span className="kpi-value">{results.billedCostFormatted} ({results.creditsConsumed} credits)</span>
-              <span className="kpi-foot">input + output</span>
             </div>
-          </div>
+            <div className="stage-body">
+              <div className="kpi-strip inline">
+                <div className="kpi">
+                  <span className="kpi-label">Input tokens</span>
+                  <span className="kpi-value">{results.billedTokens.toLocaleString()}</span>
+                  <span className="kpi-foot">
+                    {results.systemTokens > 0
+                      ? `${results.systemTokens} system (${results.systemCostFormatted}) + ${results.userTokens} user (${results.userPromptCostFormatted})`
+                      : `${results.inputCostFormatted} at $${results.pricePerMillionTokens}/1M`}
+                  </span>
+                </div>
+                {results.outputTokens && (
+                  <div className="kpi">
+                    <span className="kpi-label">Output tokens</span>
+                    <span className="kpi-value">{results.outputTokens.toLocaleString()}</span>
+                    <span className="kpi-foot">
+                      {results.outputCostFormatted} at ${results.outputPricePerMillionTokens}/1M
+                    </span>
+                  </div>
+                )}
+                <div className="kpi accent">
+                  <span className="kpi-label">Cost per request</span>
+                  <span className="kpi-value">{results.billedCostFormatted} ({results.creditsConsumed} credits)</span>
+                  <span className="kpi-foot">input + output</span>
+                </div>
+              </div>
 
-          <div className="panel-body split">
-            <div className="detail-block">
+              <div className="equation">
+                <div className="term">
+                  <span className="term-value">{results.inputCostFormatted}</span>
+                  <span className="term-label">input</span>
+                </div>
+                <span className="op">+</span>
+                <div className="term">
+                  <span className="term-value">{results.outputCostFormatted}</span>
+                  <span className="term-label">output</span>
+                </div>
+                <span className="op">=</span>
+                <div className="term outcome">
+                  <span className="term-value">{results.billedCostFormatted}</span>
+                  <span className="term-label">total cost</span>
+                </div>
+              </div>
+
+              <div className="split">
+                <div className="detail-block">
               <h3>Per-request breakdown</h3>
               <dl className="detail-list">
                 <div>
@@ -291,22 +271,6 @@ function Results({ results, loading, text, onSaveScenario }) {
                   <dt>System share of input</dt>
                   <dd className="mono">{results.systemShareOfInput}%</dd>
                 </div>
-                {results.caching && results.caching.supported && (
-                  <>
-                    <div>
-                      <dt>Without caching</dt>
-                      <dd className="mono">{results.billedCostFormatted} ({results.creditsConsumed} credits)</dd>
-                    </div>
-                    <div>
-                      <dt>With caching</dt>
-                      <dd className="mono">{results.caching.cachedTotalFormatted} ({results.caching.cachedTotalCredits} credits)</dd>
-                    </div>
-                    <div>
-                      <dt>Savings</dt>
-                      <dd className="mono">{results.caching.savingPerCallFormatted} ({results.caching.savingPerCallCredits} credits) — {results.caching.savingPercent}%</dd>
-                    </div>
-                  </>
-                )}
                 <div className="total">
                   <dt>Total per request</dt>
                   <dd className="mono">{results.billedCostFormatted} ({results.creditsConsumed} credits)</dd>
@@ -316,71 +280,130 @@ function Results({ results, loading, text, onSaveScenario }) {
 
             <div className="detail-block">
               <h3 className="block-head-row">
-                {showMonthly && results.volume
-                  ? `At ${results.volume.requests.toLocaleString()} requests/month`
-                  : 'Model rates'}
+                Model rates
                 {results.volume && (
                   <button className="block-toggle" onClick={() => setShowMonthly((v) => !v)}>
                     {showMonthly ? 'Hide monthly' : 'Show monthly estimate'}
                   </button>
                 )}
               </h3>
-              {showMonthly && results.volume ? (
-                <dl className="detail-list">
+              <dl className="detail-list">
+                <div>
+                  <dt>Input price</dt>
+                  <dd className="mono">${results.pricePerMillionTokens} / 1M</dd>
+                </div>
+                {results.outputPricePerMillionTokens && (
                   <div>
-                    <dt>System prompt cost</dt>
-                    <dd className="mono">{results.volume.systemPromptTotalFormatted} ({results.volume.systemPromptCreditsTotal} credits)</dd>
+                    <dt>Output price</dt>
+                    <dd className="mono">${results.outputPricePerMillionTokens} / 1M</dd>
                   </div>
-                  <div>
-                    <dt>User prompt cost</dt>
-                    <dd className="mono">{results.volume.userPromptTotalFormatted} ({results.volume.userPromptCreditsTotal} credits)</dd>
-                  </div>
-                  <div>
-                    <dt>Response cost</dt>
-                    <dd className="mono">{results.volume.outputTotalFormatted} ({results.volume.outputCreditsTotal} credits)</dd>
-                  </div>
-                  {results.caching && results.caching.supported && (
-                    <>
-                      <div>
-                        <dt>With prompt caching</dt>
-                        <dd className="mono">{results.volume.cachedTotalFormatted}</dd>
-                      </div>
-                      <div>
-                        <dt>Caching saves</dt>
-                        <dd className="mono">
-                          {results.volume.savingFormatted} ({results.caching.savingPercent}%)
-                        </dd>
-                      </div>
-                    </>
-                  )}
-                  <div className="total">
-                    <dt>Monthly total</dt>
-                    <dd className="mono">{results.volume.totalFormatted} ({results.volume.totalCredits} credits)</dd>
-                  </div>
-                </dl>
-              ) : (
-                <dl className="detail-list">
-                  <div>
-                    <dt>Input price</dt>
-                    <dd className="mono">${results.pricePerMillionTokens} / 1M</dd>
-                  </div>
-                  {results.outputPricePerMillionTokens && (
+                )}
+                <div>
+                  <dt>Context window</dt>
+                  <dd className="mono">{results.maxTokens.toLocaleString()} tokens</dd>
+                </div>
+              </dl>
+              {showMonthly && results.volume && (
+                <>
+                  <h3 className="block-subhead">At {results.volume.requests.toLocaleString()} requests/month</h3>
+                  <dl className="detail-list">
                     <div>
-                      <dt>Output price</dt>
-                      <dd className="mono">${results.outputPricePerMillionTokens} / 1M</dd>
+                      <dt>System prompt cost</dt>
+                      <dd className="mono">{results.volume.systemPromptTotalFormatted} ({results.volume.systemPromptCreditsTotal} credits)</dd>
                     </div>
-                  )}
-                  <div>
-                    <dt>Context window</dt>
-                    <dd className="mono">{results.maxTokens.toLocaleString()} tokens</dd>
-                  </div>
-                </dl>
+                    <div>
+                      <dt>User prompt cost</dt>
+                      <dd className="mono">{results.volume.userPromptTotalFormatted} ({results.volume.userPromptCreditsTotal} credits)</dd>
+                    </div>
+                    <div>
+                      <dt>Response cost</dt>
+                      <dd className="mono">{results.volume.outputTotalFormatted} ({results.volume.outputCreditsTotal} credits)</dd>
+                    </div>
+                    {results.caching && results.caching.supported && results.systemTokens > 0 && (
+                      <>
+                        <div>
+                          <dt>With prompt caching</dt>
+                          <dd className="mono">{results.volume.cachedTotalFormatted}</dd>
+                        </div>
+                        <div>
+                          <dt>Caching saves</dt>
+                          <dd className="mono">
+                            {results.volume.savingFormatted} ({results.caching.savingPercent}%)
+                          </dd>
+                        </div>
+                      </>
+                    )}
+                    <div className="total">
+                      <dt>Monthly total</dt>
+                      <dd className="mono">{results.volume.totalFormatted} ({results.volume.totalCredits} credits)</dd>
+                    </div>
+                  </dl>
+                </>
               )}
+                </div>
+              </div>
             </div>
           </div>
-        </section>
 
-        <ProcessVisualization text={text} results={results} />
+          {results.caching && results.caching.supported && results.systemTokens > 0 && (
+            <>
+              <div className="connector" aria-hidden="true" />
+
+              {/* Stage 5 */}
+              <div className="stage">
+                <div className="stage-head">
+                  <span className="stage-idx">05</span>
+                  <div>
+                    <div className="stage-name">Cost savings with caching</div>
+                    <div className="stage-meta">
+                      Reuse the system prompt instead of paying for it every time
+                    </div>
+                  </div>
+                </div>
+                <div className="stage-body">
+                  <div className="detail-block">
+                <div className="equation">
+                  <div className="term">
+                    <span className="term-value">{results.billedCostFormatted}</span>
+                    <span className="term-label">no caching</span>
+                  </div>
+                  <span className="op">−</span>
+                  <div className="term">
+                    <span className="term-value">{results.caching.savingPerCallFormatted}</span>
+                    <span className="term-label">saved</span>
+                  </div>
+                  <span className="op">=</span>
+                  <div className="term outcome">
+                    <span className="term-value">{results.caching.cachedTotalFormatted}</span>
+                    <span className="term-label">with caching</span>
+                  </div>
+                </div>
+                <dl className="detail-list">
+                  <div>
+                    <dt>Without caching</dt>
+                    <dd className="mono">{results.billedCostFormatted} ({results.creditsConsumed} credits)</dd>
+                  </div>
+                  <div>
+                    <dt>With caching</dt>
+                    <dd className="mono">{results.caching.cachedTotalFormatted} ({results.caching.cachedTotalCredits} credits)</dd>
+                  </div>
+                  <div className="total">
+                    <dt>Savings per request</dt>
+                    <dd className="mono">{results.caching.savingPerCallFormatted} ({results.caching.savingPerCallCredits} credits) — {results.caching.savingPercent}%</dd>
+                  </div>
+                </dl>
+                <div className="math-note">
+                  Your system prompt is the same on every call, so the provider can reuse it instead of
+                  re-reading it. That saves {results.caching.savingPercent}% per call
+                  {results.volume ? `, or ${results.volume.savingFormatted} a month at ${results.volume.requests.toLocaleString()} calls` : ''}.
+                  The first call fills the cache; every call after it gets the discount.
+                </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </ProcessVisualization>
 
         {/* How to reduce costs - optimization roadmap */}
         {results.savings && (
@@ -468,7 +491,7 @@ function Results({ results, loading, text, onSaveScenario }) {
                   <div className="tech-icon">🔤</div>
                   <div className="tech-info">
                     <div className="tech-label">Characters → Tokens</div>
-                    <div className="tech-value mono">{(results.tokenCount / chars).toFixed(2)} avg</div>
+                    <div className="tech-value mono">{results.tokenCount.toLocaleString()} tokens<br/>({(results.tokenCount / chars).toFixed(2)} avg/char)</div>
                     <div className="tech-hint">Each character uses about this many tokens</div>
                   </div>
                 </div>
