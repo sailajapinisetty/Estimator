@@ -78,6 +78,12 @@
   justify-content: space-between;
 }
 
+.label-actions {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
 .char-count {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.73rem;

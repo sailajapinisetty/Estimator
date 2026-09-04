@@ -83,6 +83,29 @@ function PromptInsights({ results }) {
 
       {tab === 'suggestions' && (
         <div className="pi-body">
+          <div className="advice-group">
+            <h4 className="advice-heading">
+              💡 Understanding Token Consumption
+            </h4>
+            <div style={{ padding: '12px', fontSize: '0.85rem', color: 'var(--ink-600)', lineHeight: '1.5' }}>
+              <p>
+                <strong>Tokens</strong> are how LLMs measure text — ~4 characters = 1 token. 
+                Every request costs money based on total tokens consumed.
+              </p>
+              <p>
+                <strong>Three components add up:</strong>
+              </p>
+              <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
+                <li><strong>System prompt:</strong> Sent on EVERY call (largest overhead)</li>
+                <li><strong>User input:</strong> Changes per request</li>
+                <li><strong>Response:</strong> Model's answer (generation models only)</li>
+              </ul>
+              <p style={{ marginTop: '8px' }}>
+                <strong>Optimization priority:</strong> Fix the largest consumer first. System prompts often consume 40-60% of tokens.
+              </p>
+            </div>
+          </div>
+
           {results.systemPromptAdvice && (
             <div className="advice-group">
               <h4 className="advice-heading">
@@ -90,7 +113,7 @@ function PromptInsights({ results }) {
                 <span className="advice-meta">
                   {results.systemPromptAdvice.tokens.toLocaleString()} tokens, sent on every call
                   {results.systemPromptAdvice.monthlyCost
-                    ? ` · ${results.systemPromptAdvice.monthlyCost}/month`
+                    ? ` · ${results.systemPromptAdvice.monthlyCost} (${results.systemPromptAdvice.monthlyCredits} credits)/month`
                     : ''}
                 </span>
               </h4>

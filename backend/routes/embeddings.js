@@ -330,7 +330,7 @@ const buildGenerationSavings = (model, systemTokens, userTokens, outTokens, volu
   }
 
   multiplier = 0.5;
-  push('Use the Batch API', '50% discount on asynchronous requests', 'Requires tolerating delayed completion');
+  push('Use the Batch API', '50% cost savings', 'Group requests together and process them later (not immediately) - like bulk mail instead of overnight delivery');
 
   const baselinePerRequest = priceOf(model, inTokens, outTokens);
 
@@ -351,6 +351,8 @@ const buildSystemPromptAdvice = (prompt, systemTokens, model, volume, cacheMulti
 
   const advice = [];
   const monthlyCost = (systemTokens / 1000000) * model.pricePerMillionTokens * (volume || 0);
+  const CREDIT_VALUE = 0.0001;
+  const monthlyCredits = monthlyCost / CREDIT_VALUE;
 
   const negativeMatches = prompt.match(/[^.!?]*\b(do not|don't|never|avoid|must not|should not)\b[^.!?]*/gi) || [];
   const negatives = negativeMatches.length;
@@ -463,6 +465,7 @@ const buildSystemPromptAdvice = (prompt, systemTokens, model, volume, cacheMulti
   return {
     tokens: systemTokens,
     monthlyCost: volume ? formatCost(monthlyCost) : null,
+    monthlyCredits: volume ? monthlyCredits.toFixed(4) : null,
     items: advice,
   };
 };
@@ -543,6 +546,7 @@ router.post('/analyze', (req, res) => {
     const cachedSystemCost = systemCost * cacheMultiplier;
     const cachedTotalCost = billedCost - systemCost + cachedSystemCost;
     const cacheSavingPerCall = billedCost - cachedTotalCost;
+    const cacheSavingPercent = billedCost > 0 ? ((cacheSavingPerCall / billedCost) * 100).toFixed(1) : '0';
 
     const volume = Math.max(0, parseInt(monthlyRequests, 10) || 0);
 
@@ -550,6 +554,14 @@ router.post('/analyze', (req, res) => {
     const CREDIT_VALUE = 0.0001;
     const creditsConsumed = billedCost / CREDIT_VALUE;
     const rawCredits = cost / CREDIT_VALUE;
+    const systemPromptCredits = systemCost / CREDIT_VALUE;
+    const systemPromptCreditsTotal = (systemCost * volume) / CREDIT_VALUE;
+    const userPromptCost = inputCost - systemCost;
+    const userPromptCredits = userPromptCost / CREDIT_VALUE;
+    const outputCredits = outputCost / CREDIT_VALUE;
+    const totalCreditsPerCall = billedCost / CREDIT_VALUE;
+    const outputCreditsTotal = (outputCost * volume) / CREDIT_VALUE;
+    const userPromptCreditsTotal = (userPromptCost * volume) / CREDIT_VALUE;
 
     res.json({
       success: true,
@@ -569,16 +581,22 @@ router.post('/analyze', (req, res) => {
       outputTokens: outTokens,
       outputCostFormatted: formatCost(outputCost),
       outputPricePerMillionTokens: model.outputPricePerMillionTokens || null,
+      outputCredits: outputCredits.toFixed(4),
       systemTokens,
       systemCostFormatted: formatCost(systemCost),
+      systemPromptCredits: systemPromptCredits.toFixed(4),
       userTokens: tokenCount,
+      userPromptCostFormatted: formatCost(userPromptCost),
+      userPromptCredits: userPromptCredits.toFixed(4),
       systemShareOfInput: billedTokens ? ((systemTokens / billedTokens) * 100).toFixed(1) : '0',
       caching: isGeneration
         ? {
             supported: cacheMultiplier < 1,
             readMultiplier: cacheMultiplier,
             cachedTotalFormatted: formatCost(cachedTotalCost),
+            cachedTotalCredits: (cachedTotalCost / CREDIT_VALUE).toFixed(4),
             savingPerCallFormatted: formatCost(cacheSavingPerCall),
+            savingPerCallCredits: (cacheSavingPerCall / CREDIT_VALUE).toFixed(4),
             savingPercent: billedCost ? ((cacheSavingPerCall / billedCost) * 100).toFixed(1) : '0',
           }
         : null,
@@ -586,10 +604,15 @@ router.post('/analyze', (req, res) => {
         ? {
             requests: volume,
             totalFormatted: formatCost(billedCost * volume),
+            totalCredits: (creditsConsumed * volume).toFixed(4),
             cachedTotalFormatted: formatCost(cachedTotalCost * volume),
             savingFormatted: formatCost(cacheSavingPerCall * volume),
             systemPromptTotalFormatted: formatCost(systemCost * volume),
+            systemPromptCreditsTotal: systemPromptCreditsTotal.toFixed(4),
+            userPromptTotalFormatted: formatCost(userPromptCost * volume),
+            userPromptCreditsTotal: userPromptCreditsTotal.toFixed(4),
             outputTotalFormatted: formatCost(outputCost * volume),
+            outputCreditsTotal: outputCreditsTotal.toFixed(4),
           }
         : null,
       creditValue: CREDIT_VALUE,

@@ -34,6 +34,7 @@ function Analyzer({
   const [editPriceOpen, setEditPriceOpen] = useState(false);
   const [catalogueOpen, setCatalogueOpen] = useState(false);
   const [showVolume, setShowVolume] = useState(false);
+  const [showSystem, setShowSystem] = useState(false);
 
   const model = models.find((m) => m.key === selectedModel);
   const overheadPct = ((overlap / Math.max(1, chunkSize - overlap)) * 100).toFixed(1);
@@ -145,19 +146,45 @@ function Analyzer({
 
         {isGeneration && (
           <div className="field">
-            <div className="field-label-row">
-              <label htmlFor="system-input">System prompt</label>
-              <span className="char-count">sent on every request</span>
-            </div>
-            <textarea
-              id="system-input"
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              placeholder="Paste your system prompt — the fixed instructions sent with every call…"
-              className="text-input system-input"
-              rows="4"
-              disabled={loading}
-            />
+            {showSystem || systemPrompt ? (
+              <>
+                <div className="field-label-row">
+                  <label htmlFor="system-input">System prompt</label>
+                  <div className="label-actions">
+                    <span className="char-count">sent on every request</span>
+                    <button
+                      className="icon-btn"
+                      onClick={() => {
+                        setSystemPrompt('');
+                        setShowSystem(false);
+                      }}
+                      disabled={loading}
+                      title="Remove the system prompt from this estimate"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  id="system-input"
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  placeholder="Paste your system prompt — the fixed instructions sent with every call…"
+                  className="text-input system-input"
+                  rows="4"
+                  disabled={loading}
+                />
+              </>
+            ) : (
+              <button
+                className="toggle-volume"
+                onClick={() => setShowSystem(true)}
+                disabled={loading}
+                title="Include a system prompt in this estimate"
+              >
+                ▶ Add system prompt (optional — billed on every request)
+              </button>
+            )}
           </div>
         )}
 

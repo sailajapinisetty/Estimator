@@ -94,7 +94,7 @@ function ScenarioComparison({ scenarios, onClose }) {
               <td className="label-cell">Cost per request</td>
               {scenarios.map((s) => (
                 <td key={s.id} className="value-cell mono emphasis">
-                  {s.results?.billedCostFormatted}
+                  {s.results?.billedCostFormatted} ({s.results?.creditsConsumed} credits)
                 </td>
               ))}
             </tr>

@@ -149,7 +149,7 @@ function Results({ results, loading, text, onSaveScenario }) {
                         <td className="num mono">${r.pricePerMillionTokens}</td>
                       </>
                     )}
-                    <td className="num mono strong">{r.billedCostFormatted}</td>
+                    <td className="num mono strong">{r.billedCostFormatted} ({r.creditsConsumed} cr)</td>
                   </tr>
                 ))}
               </tbody>
@@ -210,6 +210,14 @@ function Results({ results, loading, text, onSaveScenario }) {
             </div>
           )}
 
+          <div className="accuracy-notice info">
+            <strong>📊 What this shows:</strong> This analysis estimates token consumption and cost for your prompt. 
+            <strong> Tokens</strong> = roughly 4 characters. 
+            <strong> System prompt</strong> is sent on every API call (large overhead). 
+            Compare models with different token costs to optimize your spending. 
+            <strong>Enable caching</strong> on repeated system prompts to save up to 90%.
+          </div>
+
           <div className="conversion-chain">
             <div className="chain-node">
               <span className="chain-value">{chars.toLocaleString()}</span>
@@ -227,13 +235,8 @@ function Results({ results, loading, text, onSaveScenario }) {
                   <span className="chain-value">{results.outputTokens.toLocaleString()}</span>
                   <span className="chain-label">Output tokens</span>
                 </div>
-                <span className="chain-arrow">=</span>
               </>
             )}
-            <div className="chain-node">
-              <span className="chain-value">{results.billedCostFormatted}</span>
-              <span className="chain-label">Total cost</span>
-            </div>
           </div>
 
           <div className="kpi-strip">
@@ -257,7 +260,7 @@ function Results({ results, loading, text, onSaveScenario }) {
             )}
             <div className="kpi accent">
               <span className="kpi-label">Cost per request</span>
-              <span className="kpi-value">{results.billedCostFormatted}</span>
+              <span className="kpi-value">{results.billedCostFormatted} ({results.creditsConsumed} credits)</span>
               <span className="kpi-foot">input + output</span>
             </div>
           </div>
@@ -269,28 +272,44 @@ function Results({ results, loading, text, onSaveScenario }) {
                 <div>
                   <dt>System prompt</dt>
                   <dd className="mono">
-                    {results.systemTokens.toLocaleString()} tok · {results.systemCostFormatted}
+                    {results.systemTokens.toLocaleString()} tok · {results.systemCostFormatted} ({results.systemPromptCredits} credits)
                   </dd>
                 </div>
                 <div>
                   <dt>User prompt</dt>
                   <dd className="mono">
-                    {results.userTokens.toLocaleString()} tok
+                    {results.userTokens.toLocaleString()} tok · {results.userPromptCostFormatted} ({results.userPromptCredits} credits)
                   </dd>
                 </div>
                 <div>
                   <dt>Response</dt>
                   <dd className="mono">
-                    {results.outputTokens.toLocaleString()} tok · {results.outputCostFormatted}
+                    {results.outputTokens.toLocaleString()} tok · {results.outputCostFormatted} ({results.outputCredits} credits)
                   </dd>
                 </div>
                 <div>
                   <dt>System share of input</dt>
                   <dd className="mono">{results.systemShareOfInput}%</dd>
                 </div>
+                {results.caching && results.caching.supported && (
+                  <>
+                    <div>
+                      <dt>Without caching</dt>
+                      <dd className="mono">{results.billedCostFormatted} ({results.creditsConsumed} credits)</dd>
+                    </div>
+                    <div>
+                      <dt>With caching</dt>
+                      <dd className="mono">{results.caching.cachedTotalFormatted} ({results.caching.cachedTotalCredits} credits)</dd>
+                    </div>
+                    <div>
+                      <dt>Savings</dt>
+                      <dd className="mono">{results.caching.savingPerCallFormatted} ({results.caching.savingPerCallCredits} credits) — {results.caching.savingPercent}%</dd>
+                    </div>
+                  </>
+                )}
                 <div className="total">
                   <dt>Total per request</dt>
-                  <dd className="mono">{results.billedCostFormatted}</dd>
+                  <dd className="mono">{results.billedCostFormatted} ({results.creditsConsumed} credits)</dd>
                 </div>
               </dl>
             </div>
@@ -310,11 +329,15 @@ function Results({ results, loading, text, onSaveScenario }) {
                 <dl className="detail-list">
                   <div>
                     <dt>System prompt cost</dt>
-                    <dd className="mono">{results.volume.systemPromptTotalFormatted}</dd>
+                    <dd className="mono">{results.volume.systemPromptTotalFormatted} ({results.volume.systemPromptCreditsTotal} credits)</dd>
+                  </div>
+                  <div>
+                    <dt>User prompt cost</dt>
+                    <dd className="mono">{results.volume.userPromptTotalFormatted} ({results.volume.userPromptCreditsTotal} credits)</dd>
                   </div>
                   <div>
                     <dt>Response cost</dt>
-                    <dd className="mono">{results.volume.outputTotalFormatted}</dd>
+                    <dd className="mono">{results.volume.outputTotalFormatted} ({results.volume.outputCreditsTotal} credits)</dd>
                   </div>
                   {results.caching && results.caching.supported && (
                     <>
@@ -332,7 +355,7 @@ function Results({ results, loading, text, onSaveScenario }) {
                   )}
                   <div className="total">
                     <dt>Monthly total</dt>
-                    <dd className="mono">{results.volume.totalFormatted}</dd>
+                    <dd className="mono">{results.volume.totalFormatted} ({results.volume.totalCredits} credits)</dd>
                   </div>
                 </dl>
               ) : (
@@ -531,6 +554,15 @@ function Results({ results, loading, text, onSaveScenario }) {
                   <strong>Batch requests:</strong> If applicable, batch multiple requests to reduce overhead and
                   potentially earn better rates.
                 </li>
+                <li>
+                  <strong>Understand token consumption:</strong> Tokens = ~4 characters. System prompt, context, and documents all count. Use this estimator to identify what's consuming the most tokens and optimize it first.
+                </li>
+                <li>
+                  <strong>Track token usage per component:</strong> Check the breakdown above: system prompt % + user input % + response %. Focus on the largest consumer to save the most money.
+                </li>
+                <li>
+                  <strong>Compare models in real time:</strong> Use the "Compare models" button to see cost differences. Sometimes a cheaper model with lower token consumption costs less overall.
+                </li>
               </ul>
             </div>
           </div>
@@ -694,7 +726,7 @@ function Results({ results, loading, text, onSaveScenario }) {
               </div>
               <div className="total">
                 <dt>Total cost</dt>
-                <dd className="mono">{results.billedCostFormatted || results.costFormatted}</dd>
+                <dd className="mono">{results.billedCostFormatted || results.costFormatted} ({results.creditsConsumed} credits)</dd>
               </div>
             </dl>
           </div>
