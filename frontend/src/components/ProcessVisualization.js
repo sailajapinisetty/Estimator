@@ -3,7 +3,7 @@ import './ProcessVisualization.css';
 
 const MAX_TOKENS_SHOWN = 60;
 
-function ProcessVisualization({ text, results }) {
+function ProcessVisualization({ text, results, children, onSaveScenario }) {
   const tech = results ? results.technical : null;
 
   // Prefer real BPE tokens from the encoder; fall back to word split only if unavailable
@@ -20,16 +20,52 @@ function ProcessVisualization({ text, results }) {
   const overflow = Math.max(0, results.tokenCount - shown.length);
   const vectors = tech ? tech.chunking.chunksRequired : 1;
   const isGeneration = results.modelType === 'generation';
+  const charsPerToken = tech ? tech.tokenization.charsPerToken : (text.length / results.tokenCount).toFixed(2);
+  const outputPremium =
+    results.outputPricePerMillionTokens && results.pricePerMillionTokens
+      ? (results.outputPricePerMillionTokens / results.pricePerMillionTokens).toFixed(1)
+      : null;
 
   return (
     <section className="panel viz">
       <header className="panel-head">
         <div>
           <h2 className="panel-title">Processing Pipeline</h2>
-          <p className="panel-sub">Text → tokens → vector → billed cost</p>
+          <p className="panel-sub">
+            {isGeneration
+              ? 'Raw input → tokens → response, then cost and caching below'
+              : 'Text → tokens → vector → billed cost'}
+          </p>
         </div>
         <span className="badge">{tech ? tech.tokenization.encoder : 'tokenizer'}</span>
+        {onSaveScenario && (
+          <button
+            className="btn-save-scenario"
+            onClick={onSaveScenario}
+            title="Save this configuration and results for later comparison"
+          >
+            💾 Save scenario
+          </button>
+        )}
       </header>
+
+      {isGeneration && (
+        <div className="accuracy-notice info">
+          <strong>📊 What this shows:</strong> This analysis estimates token consumption and cost for your prompt.
+          <strong> Tokens</strong> = roughly 4 characters.
+          <strong> System prompt</strong> is sent on every API call (large overhead).
+          Compare models with different token costs to optimize your spending.
+          <strong> Enable caching</strong> on repeated system prompts to save up to 90%.
+        </div>
+      )}
+
+      {results.modelNote && <div className="accuracy-notice info">{results.modelNote}</div>}
+      {results.tokenCountExact === false && (
+        <div className="accuracy-notice">
+          Token counts for {results.provider} are approximated using OpenAI's cl100k_base encoder. This provider
+          uses a different tokenizer, so the real count will differ — treat this figure as indicative, not exact.
+        </div>
+      )}
 
       <div className="viz-flow">
         {/* Stage 1 */}
@@ -99,6 +135,13 @@ function ProcessVisualization({ text, results }) {
               ))}
               {overflow > 0 && <span className="token more">+{overflow} more</span>}
             </div>
+            <div className="math-note">
+              {text.length.toLocaleString()} characters → {results.tokenCount.toLocaleString()} tokens
+              (about {charsPerToken} characters per token).
+              {isGeneration && results.systemTokens > 0
+                ? ` Your system prompt adds ${results.systemTokens.toLocaleString()} more, so ${results.billedTokens.toLocaleString()} tokens get billed.`
+                : ''}
+            </div>
           </div>
         </div>
 
@@ -145,65 +188,57 @@ function ProcessVisualization({ text, results }) {
                 ? 'Tokens generated one at a time, each billed at the output rate'
                 : 'L2-normalized · cosine similarity ready'}
             </div>
-          </div>
-        </div>
-
-        <div className="connector" aria-hidden="true" />
-
-        {/* Stage 4 */}
-        <div className="stage">
-          <div className="stage-head">
-            <span className="stage-idx">04</span>
-            <div>
-              <div className="stage-name">Billing</div>
-              <div className="stage-meta">
-                {isGeneration ? 'Charged on input and output tokens' : 'Charged on input tokens only'}
-              </div>
-            </div>
-          </div>
-          <div className="stage-body">
-            {isGeneration ? (
-              <div className="equation">
-                <div className="term">
-                  <span className="term-value">{results.inputCostFormatted}</span>
-                  <span className="term-label">input</span>
-                </div>
-                <span className="op">+</span>
-                <div className="term">
-                  <span className="term-value">{results.outputCostFormatted}</span>
-                  <span className="term-label">output</span>
-                </div>
-                <span className="op">=</span>
-                <div className="term outcome">
-                  <span className="term-value">{results.billedCostFormatted}</span>
-                  <span className="term-label">total cost</span>
-                </div>
-              </div>
-            ) : (
-              <div className="equation">
-                <div className="term">
-                  <span className="term-value">{results.tokenCount.toLocaleString()}</span>
-                  <span className="term-label">tokens</span>
-                </div>
-                <span className="op">÷</span>
-                <div className="term">
-                  <span className="term-value">1M</span>
-                  <span className="term-label">unit</span>
-                </div>
-                <span className="op">×</span>
-                <div className="term">
-                  <span className="term-value">${results.pricePerMillionTokens}</span>
-                  <span className="term-label">rate</span>
-                </div>
-                <span className="op">=</span>
-                <div className="term outcome">
-                  <span className="term-value">{results.costFormatted}</span>
-                  <span className="term-label">total cost</span>
-                </div>
+            {isGeneration && (
+              <div className="math-note">
+                {results.outputTokens.toLocaleString()} tokens × ${results.outputPricePerMillionTokens} per
+                million = {results.outputCostFormatted}. Output costs {outputPremium}× more than input, so
+                shorter answers are the fastest way to save.
               </div>
             )}
           </div>
         </div>
+
+        {children}
+
+        {!isGeneration && (
+          <>
+            <div className="connector" aria-hidden="true" />
+
+            {/* Stage 4 */}
+            <div className="stage">
+              <div className="stage-head">
+                <span className="stage-idx">04</span>
+                <div>
+                  <div className="stage-name">Billing</div>
+                  <div className="stage-meta">Charged on input tokens only</div>
+                </div>
+              </div>
+              <div className="stage-body">
+                <div className="equation">
+                  <div className="term">
+                    <span className="term-value">{results.tokenCount.toLocaleString()}</span>
+                    <span className="term-label">tokens</span>
+                  </div>
+                  <span className="op">÷</span>
+                  <div className="term">
+                    <span className="term-value">1M</span>
+                    <span className="term-label">unit</span>
+                  </div>
+                  <span className="op">×</span>
+                  <div className="term">
+                    <span className="term-value">${results.pricePerMillionTokens}</span>
+                    <span className="term-label">rate</span>
+                  </div>
+                  <span className="op">=</span>
+                  <div className="term outcome">
+                    <span className="term-value">{results.costFormatted}</span>
+                    <span className="term-label">total cost</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
